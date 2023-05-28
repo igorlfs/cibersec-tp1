@@ -1,0 +1,48 @@
+[tool.poetry]
+name = "cibersec-tp1"
+version = "0.1.0"
+description = ""
+authors = ["Igor <igorlfs@ufmg.br>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.11,<3.12"
+pandas = "^2.0.1"
+numpy = "^1.23"
+scikit-learn = "^1.2.2"
+matplotlib = "^3.7.1"
+tensorflow = "^2.12.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+ignore = ["E501", "B018"]
+select = [
+    "F",
+    "E",
+    "W",
+    "C90",
+    "I",
+    "N",
+    "UP",
+    "B",
+    "A",
+    "C4",
+    "INP",
+    "ISC",
+    "ICN",
+    "RET",
+    "SIM",
+    "ARG",
+    "PD",
+    "PLC",
+    "PLE",
+    "PLR",
+    "PLW",
+    "NPY",
+    "RUF",
+]
