@@ -1,10 +1,10 @@
-from collections import Counter
-
 import matplotlib.pyplot as plt
+import nltk
 import numpy as np
 import pandas as pd
 import tensorflow as tf
 from keras import layers
+from nltk.corpus import stopwords
 from sklearn.metrics import precision_recall_curve
 from sklearn.model_selection import train_test_split
 from tensorflow import keras
@@ -14,6 +14,7 @@ from tensorflow import keras
 EMBEDDING_DIM = 16
 EPOCHS = 5
 MAX_LEN = 32
+MAX_WORDS = 20000
 
 TEST_SIZE = 0.2
 PROBABILITY_THRESHOLD = 0.5
@@ -39,33 +40,30 @@ x_train, x_test, y_train, y_test = train_test_split(
     dataset.message, dataset.label, test_size=TEST_SIZE
 )
 
-# |%%--%%| <2RE4ItNaiZ|i3kEJz8Udm>
+# |%%--%%| <2RE4ItNaiZ|zkQhRQd7a5>
 
 
-def counter_word(text_col: pd.Series):
-    count = Counter()
-    for text in text_col.to_numpy():
-        for word in text.split():
-            count[word] += 1
-    return count
+# Tentando remover palavras comuns como "the", "a", "an", "in", etc
+nltk.download("stopwords")
+stop = set(stopwords.words("english"))
 
 
-counter = counter_word(dataset["message"])
+# https://stackoverflow.com/questions/5486337/how-to-remove-stop-words-using-nltk-or-python
+def remove_stopwords(text: str):
+    filtered_words = [word.lower() for word in text.split() if word.lower() not in stop]
+    return " ".join(filtered_words)
 
-# |%%--%%| <i3kEJz8Udm|WvJCQp56qt>
 
-# TODO: Teste de sanidade -> filtrar stopwords
-counter.most_common(5)
+# |%%--%%| <zkQhRQd7a5|9jCxpDoKnh>
 
-# |%%--%%| <WvJCQp56qt|e7mlMxTkCn>
 
-num_unique_words = len(counter)
+dataset["message"] = dataset.message.map(remove_stopwords)
 
-# |%%--%%| <e7mlMxTkCn|99Cjm1uKXM>
+# |%%--%%| <9jCxpDoKnh|99Cjm1uKXM>
 
 # TODO: should we actually use num_unique_words as max_tokens? There's going to be more data adter the training
 vectorizer = layers.TextVectorization(
-    max_tokens=num_unique_words,
+    max_tokens=MAX_WORDS,
     output_mode="int",
     output_sequence_length=MAX_LEN,
     encoding="ISO-8859-1",
@@ -79,7 +77,7 @@ vectorizer.adapt(x_train.to_numpy())
 
 model = keras.Sequential()
 model.add(vectorizer)
-model.add(layers.Embedding(num_unique_words, EMBEDDING_DIM, input_length=MAX_LEN))
+model.add(layers.Embedding(MAX_WORDS, EMBEDDING_DIM, input_length=MAX_LEN))
 model.add(layers.Bidirectional(layers.LSTM(64, return_sequences=True)))
 model.add(layers.Bidirectional(layers.LSTM(64)))
 model.add(layers.Flatten())
@@ -107,7 +105,14 @@ history = model.fit(
     epochs=EPOCHS,
 )
 
-# |%%--%%| <HsHN9kKDZu|TIEPotKNVI>
+# |%%--%%| <HsHN9kKDZu|yqaMtIpIFh>
+
+# Perda e Acurácia
+loss, accuracy = model.evaluate(x_test, y_test)
+print("Perda:", loss)
+print("Acurácia:", accuracy)
+
+# |%%--%%| <yqaMtIpIFh|TIEPotKNVI>
 
 
 # Fazendo predições para os dados de teste
@@ -156,31 +161,7 @@ plt.yticks(np.arange(0, 1.1, 0.1))
 plt.title("Curva Precisão-Recall")
 plt.show()
 
-# |%%--%%| <PTxwUG0zAg|yqaMtIpIFh>
-
-# Perda e Acurácia
-loss, accuracy = model.evaluate(x_test, y_test)
-print("Perda:", loss)
-print("Acurácia:", accuracy)
-
-# |%%--%%| <yqaMtIpIFh|SaIgrFVeyY>
-
-# Plotando perda e acurácia
-
-_, ax = plt.subplots()
-plt.title("Perda e Acurácia por Época")
-
-ax2 = ax.twinx()
-ax.plot(history.history["loss"], color="blue")
-ax.set_ylabel("Perda", color="blue")
-ax2.plot(history.history["binary_accuracy"], color="red")
-ax2.set_ylabel("Acurácia", color="red")
-
-ax.set_xlabel("Épocas")
-plt.show()
-
-
-# |%%--%%| <SaIgrFVeyY|nqOzfNZF4f>
+# |%%--%%| <PTxwUG0zAg|nqOzfNZF4f>
 
 # Exemplo de predição
 
